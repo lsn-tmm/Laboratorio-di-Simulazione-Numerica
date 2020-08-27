@@ -174,9 +174,9 @@ void my_Metropolis(function<double(const vector<double> &)> Psi, function<vector
     }
     else xyz[i] = xyz[i-1];
 
+    if (i < eqstep/10){
     output << xyz[i][0] << " " << xyz[i][1] << " " << xyz[i][2] << endl;
-
-    if(i >= eqstep){
+    } else if(i >= eqstep){
       r[i-eqstep] = sqrt( pow(xyz[i-eqstep][0],2) + pow(xyz[i-eqstep][1],2) + pow(xyz[i-eqstep][2],2) );
     }
 
