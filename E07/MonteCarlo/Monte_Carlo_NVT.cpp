@@ -21,7 +21,7 @@ using namespace std;
 
 void my_system(std::string const &s) { // Utilizzare i comandi system() con string in ingresso
   int a = std::system(s.c_str());
-  if (a == 1) std::cerr << "not ok"; 
+  if (a == 1) std::cerr << "not ok";
 }
 
 int main(){
@@ -43,15 +43,15 @@ int main(){
     return -1;
   }
   read.close();
-  
+
   Input(); //Inizialization
 
   Equilibration();
   ConfFinal(); //Write final configuration
-  
+
   //Correlation();
 
-  
+
   my_system("./" + file + "/clean.sh");
   int nconf = 1;
   for(int iblk=1; iblk <= nblk; ++iblk){ //Simulation
@@ -95,7 +95,7 @@ void Input(void)
    input >> seed[0] >> seed[1] >> seed[2] >> seed[3];
    rnd.SetRandom(seed,p1,p2);
    input.close();
-  
+
 //Read input informations
   ReadInput.open("input.dat");
 
@@ -115,12 +115,12 @@ void Input(void)
 
   ReadInput >> rcut;
   cout << "Cutoff of the interatomic potential = " << rcut << endl << endl;
-    
+
   //Tail corrections for potential energy and pressure
   vtail = (8.0*pi*rho)/(9.0*pow(rcut,9)) - (8.0*pi*rho)/(3.0*pow(rcut,3));
   ptail = (32.0*pi*rho)/(9.0*pow(rcut,9)) - (16.0*pi*rho)/(3.0*pow(rcut,3));
   cout << "Tail correction for the potential energy = " << vtail << endl;
-  cout << "Tail correction for the virial           = " << ptail << endl; 
+  cout << "Tail correction for the virial           = " << ptail << endl;
 
   ReadInput >> delta;
 
@@ -138,7 +138,7 @@ void Input(void)
 //Prepare arrays for measurements
   iv = 0; //Potential energy
   iw = 1; //Virial
- 
+
   n_props = 2; //Number of observables
 
 //measurement of g(r)
@@ -158,7 +158,7 @@ void Input(void)
     z[i] = Pbc( z[i] * box );
   }
   ReadConf.close();
-  
+
 //Evaluate potential energy and virial of the initial configuration
   Measure();
 
@@ -170,7 +170,7 @@ void Input(void)
 
 void Restart(){
   ifstream ReadConf;
-  
+
   //Read initial configuration
   cout << "Restart configuration from file config.final " << endl << endl;
   ReadConf.open(file + "/config.final");
@@ -182,7 +182,7 @@ void Restart(){
     z[i] = Pbc( z[i] * box );
   }
   ReadConf.close();
-  
+
 
   Measure();
 
@@ -200,14 +200,14 @@ void Equilibration(void){
   ofstream Epot, Pres;
   std::string dir = "eq";
   int steps = 0;
-  
+
   if (file == "solid") steps = pow(10,3);
   else if (file == "liquid") steps = pow(10,4);
   else if (file == "gas") steps = 5*pow(10,4);
- 
+
   Epot.open(dir + "/" + dir + "_epot." + file,ios::out);
   Pres.open(dir + "/" + dir + "_press." + file,ios::out);
-  
+
   for(int i=0; i<steps;i++){ // Equilibration
     Move();
 
@@ -222,7 +222,7 @@ void Equilibration(void){
 
   Epot.close();
   Pres.close();
-  
+
   return;
 
 }
@@ -233,13 +233,13 @@ void Correlation(void){
   std::string dir = "correlation";
 
   cout << endl << "Inizio presa dati" << endl;
- 
+
   Epot.open(dir + "/" + dir + "_epot." + file,ios::out);
   Pres.open(dir + "/" + dir + "_press." + file,ios::out);
-  
+
   for(int i=0; i<5*pow(10,5);i++){ // Equilibration
     if (i%(int)pow(10,4) == 0) cout << "step:" << i << endl;
-    
+
     Move();
     Measure();
     //Potential energy per particle
@@ -251,7 +251,7 @@ void Correlation(void){
 
   Epot.close();
   Pres.close();
-  
+
   return;
 
 }
@@ -285,13 +285,13 @@ void Move(void)
 
   //Metropolis test
     p = exp(beta*(energy_old-energy_new));
-    if(p >= rnd.Rannyu())  
+    if(p >= rnd.Rannyu())
     {
     //Update
        x[o] = xnew;
        y[o] = ynew;
        z[o] = znew;
-    
+
        accepted = accepted + 1.0;
     }
     attempted = attempted + 1.0;
@@ -364,7 +364,7 @@ void Measure()
        v += vij;
        w += wij;
      }
-    }          
+    }
   }
 
   walker[iv] = 4.0 * v;
@@ -376,7 +376,7 @@ void Measure()
 
 void Reset(int iblk) //Reset block averages
 {
-   
+
    if(iblk == 1)
    {
        for(int i=0; i<n_props; ++i)
@@ -409,24 +409,24 @@ void Accumulate(void) //Update block averages
 
 void Averages(int iblk) //Print results for current block
 {
-    
+
    double r, gdir;
    ofstream Gofr, Gave, Epot, Pres;
    const int wd=12;
-    
+
     cout << "Block number " << iblk << endl;
     cout << "Acceptance rate " << accepted/attempted << endl << endl;
-    
+
     Epot.open(file + "/output.epot.0",ios::app);
     Pres.open(file + "/output.pres.0",ios::app);
     Gofr.open(file + "/output.gofr.0",ios::app);
     Gave.open(file + "/output.gave.0",ios::app);
-    
+
     stima_pot = blk_av[iv]/blk_norm/(double)npart + vtail; //Potential energy
     glob_av[iv] += stima_pot;
     glob_av2[iv] += stima_pot*stima_pot;
     err_pot=Error(glob_av[iv],glob_av2[iv],iblk);
-    
+
     stima_pres = rho * temp + (blk_av[iw]/blk_norm + ptail * (double)npart) / vol; //Pressure
     glob_av[iw] += stima_pres;
     glob_av2[iw] += stima_pres*stima_pres;
@@ -444,22 +444,22 @@ void Averages(int iblk) //Print results for current block
 
       r = bin_size * (i-1);
       double V_r = 4./3. * M_PI * ( pow(r + bin_size,3) - pow(r,3) );
-      
+
       gdir =  blk_av[i]/blk_norm * pow( rho * npart * V_r ,-1);
       glob_av[i] += gdir;
       glob_av2[i] += gdir*gdir;
 
-      //average value of g(r) in each block 
+      //average value of g(r) in each block
       Gofr << iblk << setw(wd) << r <<  setw(wd)  << glob_av[i]/(double)iblk << endl;
 
-      //final average value of g(𝑟) with statistical uncertainties 
+      //final average value of g(𝑟) with statistical uncertainties
       if(iblk == nblk){
 	err_gdir=Error(glob_av[i],glob_av2[i],iblk);
 	Gave << r << setw(wd) << glob_av[i]/(double)iblk << setw(wd) << err_gdir << endl;
       }
-      
+
     }
-    
+
 //------------------------------------------------------------------------------
 
     cout << "----------------------------" << endl << endl;
@@ -475,9 +475,7 @@ void Print_SI(void){
 
   const double K_b = 1.38064852 * pow(10,-23);
   const double eps_A = 120. * K_b;
-  const double eps_K = 164. * K_b;
   const double sigma_A = 0.34;
-  const double sigma_K = 0.364;
 
   vector<string> files = {"epot","pres","gave"};
   fstream input, output_A, output_K;
@@ -485,12 +483,11 @@ void Print_SI(void){
   for (auto name : files) {
 
     if (name == "gave") {
-      
+
       double bin = 0.0, value = 0.0, err = 0.0;
-      
+
       input.open(file + "/output." + name + ".0", ios::in);
       output_A.open(file + "/argon_" + name + ".out", ios::out);
-      output_K.open(file + "/kripton_" + name + ".out", ios::out);
 
       for(int i=0; i<nbins; i++){
 	input >> bin;
@@ -498,11 +495,9 @@ void Print_SI(void){
 	input >> err;
 
 	output_A << bin*sigma_A << " " << value*sigma_A << " " << err*sigma_A << endl;
-	output_K << bin*sigma_K << " " << value*sigma_K << " " << err*sigma_K << endl;
       }
 	input.close();
 	output_A.close();
-	output_K.close();
     }
     else{
       int blk = 0;
@@ -510,7 +505,6 @@ void Print_SI(void){
 
       input.open(file + "/output." + name + ".0", ios::in);
       output_A.open(file + "/argon_" + name + ".out", ios::out);
-      output_K.open(file + "/kripton_" + name + ".out", ios::out);
 
       for(int i=0; i<nblk; i++){
 	input >> blk;
@@ -520,17 +514,14 @@ void Print_SI(void){
 
 	if (name == "epot"){
 	  output_A << blk << " " << value*eps_A << " " << ave_value*eps_A << " " << err*eps_A << endl;
-	  output_K << blk << " " << value*eps_K << " " << ave_value*eps_K << " " << err*eps_K << endl;
 	}
 	else if (name == "pres") {
 	  output_A << blk << " " << value*eps_A/pow(sigma_A,3) << " " << ave_value*eps_A/pow(sigma_A,3) << " " << err*eps_A/pow(sigma_A,3) << endl;
-	  output_K << blk << " " << value*eps_K/pow(sigma_K,3) << " " << ave_value*eps_K/pow(sigma_K,3) << " " << err*eps_K/pow(sigma_K,3) << endl;
 	}
       }
-      
+
       input.close();
       output_A.close();
-      output_K.close();
 
     }
 
