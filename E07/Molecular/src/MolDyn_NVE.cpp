@@ -17,7 +17,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 void my_system(std::string const &s) { // Utilizzare i comandi system() con string in ingresso
   int a = std::system(s.c_str());
-  if (a == 1) std::cerr << "not ok"; 
+  if (a == 1) std::cerr << "not ok";
 }
 
 
@@ -43,7 +43,7 @@ int main(){
   }
   read.close();
 
-  my_system("./ " + file + "/clean.sh"); 
+  my_system("./ " + file + "/clean.sh");
 
   for (int i=0;i<7;i++) {
     if (i == 0){
@@ -60,7 +60,7 @@ int main(){
       if(istep%100 == 0) cout << "Number of time-steps: " << istep << endl;
       if(istep%10 == 0){
         Measure_T();     //Properties measurement
-	//        ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"! 
+	//        ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"!
         nconf += 1;
       }
     }
@@ -70,22 +70,6 @@ int main(){
   }
 
   cout << endl << "Temperatura equilibrata: inizio simulazione. " << endl;
-  
-  /*
-  int nconf = 1;
-  for(int istep=1; istep <= nstep; ++istep){
-    Move();           //Move particles with Verlet algorithm
-    if(istep%iprint == 0) cout << "Number of time-steps: " << istep << endl;
-    if(istep%10 == 0){
-      Measure();     //Properties measurement
-      //        ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"! 
-      nconf += 1;
-    }
-  }
-  ConfFinal();         //Write final configuration to restart
-
-  Averages();        //Compute average values and errors
-  */
 
   nblk = 20;
   nstep = 5*pow(10,3);
@@ -108,7 +92,7 @@ int main(){
 
   Print_SI();
   return 0;
-  
+
 }
 
 
@@ -123,7 +107,7 @@ void Input(void){ //Prepare all stuff for the simulation
 
   seed = 1;    //Set seed for random numbers
   srand(seed); //Initialize random number generator
-  
+
   ReadInput.open("input.dat"); //Read input
 
   ReadInput >> temp;
@@ -161,9 +145,9 @@ void Input(void){ //Prepare all stuff for the simulation
   //Prepare arrays for measurements
   iv = 0; //Potential energy
   iw = 1; //Virial
- 
+
   n_props = 2; //Number of observables
-  
+
   //measurement of g(r)
   igofr = 2;
   nbins = 100;
@@ -213,7 +197,7 @@ void Input(void){ //Prepare all stuff for the simulation
    }
    sumv2 /= (double)npart;
 
-   fs = sqrt(3 * temp / sumv2);   // fs = velocity scale factor 
+   fs = sqrt(3 * temp / sumv2);   // fs = velocity scale factor
    for (int i=0; i<npart; ++i){
      vx[i] *= fs;
      vy[i] *= fs;
@@ -231,7 +215,7 @@ void Restart(void){
   double Temp;
 
   //cout << endl << "RESTART" << endl;
-  
+
   //Read initial configuration with final and old files
   cout << "Read initial configuration from file config.final " << endl;
   cout << "Read initial configuration from file old.final " << endl << endl;
@@ -257,22 +241,22 @@ void Restart(void){
   //Kinetic energy
   double t = 0;
   for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
-  
+
   Temp = (2.0 / 3.0) * t/(double)npart; //Temperature
 
   //cout << "Temp : " << Temp << endl;
   if ( T == 0 ){
-    if  (file == "solid") T = 0.8; 
+    if  (file == "solid") T = 0.8;
     else if (file == "liquid") T = 1.1;
     else if (file == "gas") T = 1.2;
 
     cout << "Equilibrating at the temperature: " << T << endl << endl;
   }
-  
+
 
   double fs = sqrt(T/Temp);   // fs = velocity scale factor
   // cout << "fs : " << fs << endl;
-  
+
   for (int i=0; i<npart; ++i){
     vx[i] *= fs;
     vy[i] *= fs;
@@ -281,7 +265,7 @@ void Restart(void){
     xold[i] = Pbc(x[i] - vx[i] * delta);
     yold[i] = Pbc(y[i] - vy[i] * delta);
     zold[i] = Pbc(z[i] - vz[i] * delta);
-    
+
   }
 
   return;
@@ -336,72 +320,17 @@ double Force(int ip, int idir){ //Compute forces as -Grad_ip V(r)
       }
     }
   }
-  
+
   return f;
 }
 
-/*
-void Measure(){ //Properties measurement
-  //int bin;
-  double v, t, vij;
-  double dx, dy, dz, dr;
-  ofstream Epot, Ekin, Etot, Temp;
 
-  Epot.open(file + "/output_epot.dat",ios::app);
-  Ekin.open(file + "/output_ekin.dat",ios::app);
-  Temp.open(file + "/output_temp.dat",ios::app);
-  Etot.open(file + "/output_etot.dat",ios::app);
-
-  v = 0.0; //reset observables
-  t = 0.0;
-
-//cycle over pairs of particles
-  for (int i=0; i<npart-1; ++i){
-    for (int j=i+1; j<npart; ++j){
-
-     dx = Pbc( xold[i] - xold[j] );
-     dy = Pbc( yold[i] - yold[j] );
-     dz = Pbc( zold[i] - zold[j] );
-
-     dr = dx*dx + dy*dy + dz*dz;
-     dr = sqrt(dr);
-
-     if(dr < rcut){
-       vij = 4.0/pow(dr,12) - 4.0/pow(dr,6);
-
-//Potential energy
-       v += vij;
-     }
-    }          
-  }
-
-//Kinetic energy
-  for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
-   
-    stima_pot = v/(double)npart; //Potential energy per particle
-    stima_kin = t/(double)npart; //Kinetic energy per particle
-    stima_temp = (2.0 / 3.0) * t/(double)npart; //Temperature
-    stima_etot = (t+v)/(double)npart; //Total energy per particle
-
-    Epot << stima_pot  << endl;
-    Ekin << stima_kin  << endl;
-    Temp << stima_temp << endl;
-    Etot << stima_etot << endl;
-
-    Epot.close();
-    Ekin.close();
-    Temp.close();
-    Etot.close();
-
-    return;
-}
-*/
 void Measure_T(){
   double t = 0;
   ofstream Temp;
 
   Temp.open(file + "/eq_temp.dat",ios::app);
-  
+
   //Kinetic energy
   for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
   stima_temp = (2.0 / 3.0) * t/(double)npart; //Temperature
@@ -453,7 +382,7 @@ void Measure()
        v += vij;
        w += wij;
      }
-    }          
+    }
   }
 
   walker[iv] = 4.0 * v;
@@ -465,7 +394,7 @@ void Measure()
 
 void Reset(int iblk) //Reset block averages
 {
-   
+
    if(iblk == 1)
    {
        for(int i=0; i<n_props; ++i)
@@ -495,99 +424,26 @@ void Accumulate(void) //Update block averages
    blk_norm = blk_norm + 1.0;
 }
 
-
-
-/*
-void Averages(){
-  int N = nstep/(10 * 10);
-  int L = nstep/N;
-  double ave[N];
-  double av2[N];
-  double* sum_prog = new double[N];
-  double* su2_prog = new double[N];
-  double err_prog[N];
-
-  const double K_b = 1.38064852 * pow(10,-23);
-  const double eps = 120. * K_b;
-
-  vector<string> files = {"etot", "ekin", "epot", "temp"};
-  fstream input, output, data;
-
-  for(auto name: files){
-
-    //Inizializzazione variabili di appoggio
-    for(int i=0;i<N;i++){
-      ave[i] = 0;
-      av2[i] = 0;
-      sum_prog[i] = 0;
-      su2_prog[i] = 0;
-      err_prog[i] = 0;
-    }
-
-    double sum = 0;
-    double k = 0;
-
-    input.open(file + "/output_" + name + ".dat", ios::in);
-    output.open(file + "/ave_" + name + ".out", ios::out);
-    data.open(file + "/ave_" + name + ".dat", ios::out);
-  
-    for(int i=0;i<N;i++){
-      sum = 0;
-      for(int j=0;j<L;j++){
-	input >> k;
-	sum += k;
-      }
-      ave[i] = sum/L;
-      av2[i] = pow(ave[i],2);
-    }
-
-    for(int i=0;i<N;i++){
-      for(int j=0;j<i+1;j++){
-	sum_prog[i] += ave[j];
-	su2_prog[i] += av2[j];
-      }
-      sum_prog[i] /= (i+1);
-      su2_prog[i] /= (i+1);
-      err_prog[i] = error(sum_prog,su2_prog,i);
-
-      output << sum_prog[i] << " " << err_prog[i] << endl;
-
-      if (name == "temp") data << sum_prog[i]*eps/K_b << " " << err_prog[i]*eps/K_b << endl;
-      else  data << sum_prog[i]*eps << " " << err_prog[i]*eps << endl;
-      
-    }
-
-    input.close();
-    output.close();
-    data.close();
-
-  }
-
-  return;
-
-}
-*/
-
 void Averages(int iblk) //Print results for current block
 {
-    
+
    double r, gdir;
    ofstream Gofr, Gave, Epot, Pres;
    const int wd=12;
-    
+
     cout << "Block number " << iblk << endl;
     //cout << "Acceptance rate " << accepted/attempted << endl << endl;
-    
+
     Epot.open(file + "/output.epot.0",ios::app);
     Pres.open(file + "/output.pres.0",ios::app);
     Gofr.open(file + "/output.gofr.0",ios::app);
     Gave.open(file + "/output.gave.0",ios::app);
-    
+
     stima_pot = blk_av[iv]/blk_norm/(double)npart + vtail; //Potential energy
     glob_av[iv] += stima_pot;
     glob_av2[iv] += stima_pot*stima_pot;
     err_pot=Error(glob_av[iv],glob_av2[iv],iblk);
-    
+
     stima_pres = rho * temp + (blk_av[iw]/blk_norm + ptail * (double)npart) / vol; //Pressure
     glob_av[iw] += stima_pres;
     glob_av2[iw] += stima_pres*stima_pres;
@@ -605,22 +461,22 @@ void Averages(int iblk) //Print results for current block
 
       r = bin_size * (i-1);
       double V_r = 4./3. * M_PI * ( pow(r + bin_size,3) - pow(r,3) );
-      
+
       gdir =  blk_av[i]/blk_norm * pow( rho * npart * V_r ,-1);
       glob_av[i] += gdir;
       glob_av2[i] += gdir*gdir;
 
-      //average value of g(r) in each block 
+      //average value of g(r) in each block
       Gofr << iblk << setw(wd) << r <<  setw(wd)  << glob_av[i]/(double)iblk << endl;
 
-      //final average value of g(𝑟) with statistical uncertainties 
+      //final average value of g(𝑟) with statistical uncertainties
       if(iblk == nblk){
 	err_gdir=Error(glob_av[i],glob_av2[i],iblk);
 	Gave << r << setw(wd) << glob_av[i]/(double)iblk << setw(wd) << err_gdir << endl;
       }
-      
+
     }
-    
+
 //------------------------------------------------------------------------------
 
     cout << "----------------------------" << endl << endl;
@@ -636,22 +492,19 @@ void Print_SI(void){
 
   const double K_b = 1.38064852 * pow(10,-23);
   const double eps_A = 120. * K_b;
-  const double eps_K = 164. * K_b;
   const double sigma_A = 0.34;
-  const double sigma_K = 0.364;
 
   vector<string> files = {"epot","pres","gave"};
-  fstream input, output_A, output_K;
+  fstream input, output_A;
 
   for (auto name : files) {
 
     if (name == "gave") {
-      
+
       double bin = 0.0, value = 0.0, err = 0.0;
-      
+
       input.open(file + "/output." + name + ".0", ios::in);
       output_A.open(file + "/argon_" + name + ".out", ios::out);
-      output_K.open(file + "/kripton_" + name + ".out", ios::out);
 
       for(int i=0; i<nbins; i++){
 	input >> bin;
@@ -659,11 +512,9 @@ void Print_SI(void){
 	input >> err;
 
 	output_A << bin*sigma_A << " " << value*sigma_A << " " << err*sigma_A << endl;
-	output_K << bin*sigma_K << " " << value*sigma_K << " " << err*sigma_K << endl;
       }
 	input.close();
 	output_A.close();
-	output_K.close();
     }
     else{
       int blk = 0;
@@ -671,7 +522,6 @@ void Print_SI(void){
 
       input.open(file + "/output." + name + ".0", ios::in);
       output_A.open(file + "/argon_" + name + ".out", ios::out);
-      output_K.open(file + "/kripton_" + name + ".out", ios::out);
 
       for(int i=0; i<nblk; i++){
 	input >> blk;
@@ -681,17 +531,14 @@ void Print_SI(void){
 
 	if (name == "epot"){
 	  output_A << blk << " " << value*eps_A << " " << ave_value*eps_A << " " << err*eps_A << endl;
-	  output_K << blk << " " << value*eps_K << " " << ave_value*eps_K << " " << err*eps_K << endl;
 	}
 	else if (name == "pres") {
 	  output_A << blk << " " << value*eps_A/pow(sigma_A,3) << " " << ave_value*eps_A/pow(sigma_A,3) << " " << err*eps_A/pow(sigma_A,3) << endl;
-	  output_K << blk << " " << value*eps_K/pow(sigma_K,3) << " " << ave_value*eps_K/pow(sigma_K,3) << " " << err*eps_K/pow(sigma_K,3) << endl;
 	}
       }
-      
+
       input.close();
       output_A.close();
-      output_K.close();
 
     }
 
@@ -751,7 +598,7 @@ double Error(double sum, double sum2, int iblk)
 }
 
 double error(double* AV, double* AV2, int n){
-  
+
   if (n == 0)
     return 0;
   else
