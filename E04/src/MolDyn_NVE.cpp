@@ -16,7 +16,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 void my_system(std::string const &s) { // Utilizzare i comandi system() con string in ingresso
   int a = std::system(s.c_str());
-  if (a == 1) std::cerr << "not ok"; 
+  if (a == 1) std::cerr << "not ok";
 }
 
 
@@ -73,13 +73,13 @@ int main(){
 
   }
 
-  
+
   //Estendo l'ultima fase dell'equilibrazione
   int extra_step = 0;
-  if  (file == "solid") extra_step = 5*pow(10,3); 
+  if  (file == "solid") extra_step = 5*pow(10,3);
   else if (file == "liquid") extra_step = 5*pow(10,3);
   else if (file == "gas") extra_step = pow(10,4);
-  
+
   for(int istep=1; istep <= extra_step; ++istep){
     Move();           //Move particles with Verlet algorithm
     if(istep%100 == 0) cout << "Number of time-steps: " << istep << endl;
@@ -89,24 +89,24 @@ int main(){
   }
   ConfFinal();         //Write final configuration to restart
   ConfOld();           //Write final -1 configuration to restart
-  
+
   cout << endl << "Temperatura equilibrata: inizio simulazione. " << endl;
-  
-  
+
+
   int nconf = 1;
   for(int istep=1; istep <= nstep; ++istep){
     Move();           //Move particles with Verlet algorithm
     if(istep%iprint == 0) cout << "Number of time-steps: " << istep << endl;
     if(istep%10 == 0){
       Measure();     //Properties measurement
-      //ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"! 
+      //ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"!
       nconf += 1;
     }
   }
   ConfFinal();         //Write final configuration to restart
 
   Averages(file);        //Compute average values and errors
- 
+
   return 0;
 }
 
@@ -122,7 +122,7 @@ void Input(void){ //Prepare all stuff for the simulation
 
   seed = 1;    //Set seed for random numbers
   srand(seed); //Initialize random number generator
-  
+
   ReadInput.open("input.dat"); //Read input
 
   ReadInput >> temp;
@@ -152,7 +152,8 @@ void Input(void){ //Prepare all stuff for the simulation
   ik = 1; //Kinetic energy
   ie = 2; //Total energy
   it = 3; //Temperature
-  n_props = 4; //Number of observables
+  iw = 4; //Virial
+  n_props = 5; //Number of observables
 
 //Read initial configuration
   my_system("cp config.fcc config.0");
@@ -189,7 +190,7 @@ void Input(void){ //Prepare all stuff for the simulation
    }
    sumv2 /= (double)npart;
 
-   fs = sqrt(3 * temp / sumv2);   // fs = velocity scale factor 
+   fs = sqrt(3 * temp / sumv2);   // fs = velocity scale factor
    for (int i=0; i<npart; ++i){
      vx[i] *= fs;
      vy[i] *= fs;
@@ -207,7 +208,7 @@ void Restart(void){
   double Temp;
 
   //cout << endl << "RESTART" << endl;
-  
+
   //Read initial configuration with final and old files
   cout << "Read initial configuration from file config.final " << endl;
   cout << "Read initial configuration from file old.final " << endl << endl;
@@ -233,12 +234,12 @@ void Restart(void){
   //Kinetic energy
   double t = 0;
   for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
-  
+
   Temp = (2.0 / 3.0) * t/(double)npart; //Temperature
 
   //cout << "Temp : " << Temp << endl;
   if ( T == 0 ){
-    if  (file == "solid") T = 0.8; 
+    if  (file == "solid") T = 0.8;
     else if (file == "liquid") T = 1.1;
     else if (file == "gas") T = 1.2;
 
@@ -247,7 +248,7 @@ void Restart(void){
 
   double fs = sqrt(T/Temp);   // fs = velocity scale factor
   // cout << "fs : " << fs << endl;
-  
+
   for (int i=0; i<npart; ++i){
     vx[i] *= fs;
     vy[i] *= fs;
@@ -256,7 +257,7 @@ void Restart(void){
     xold[i] = Pbc(x[i] - vx[i] * delta);
     yold[i] = Pbc(y[i] - vy[i] * delta);
     zold[i] = Pbc(z[i] - vz[i] * delta);
-    
+
   }
 
   return;
@@ -311,23 +312,26 @@ double Force(int ip, int idir){ //Compute forces as -Grad_ip V(r)
       }
     }
   }
-  
+
   return f;
 }
 
 void Measure(){ //Properties measurement
   //int bin;
-  double v, t, vij;
+  double v, t, w;
+  double vij, wij;
   double dx, dy, dz, dr;
-  ofstream Epot, Ekin, Etot, Temp;
+  ofstream Epot, Ekin, Etot, Temp, Press;
 
   Epot.open(file + "/output_epot.dat",ios::app);
   Ekin.open(file + "/output_ekin.dat",ios::app);
   Temp.open(file + "/output_temp.dat",ios::app);
   Etot.open(file + "/output_etot.dat",ios::app);
+  Press.open(file + "/output_press.dat",ios::app);
 
   v = 0.0; //reset observables
   t = 0.0;
+  w = 0.0;
 
 //cycle over pairs of particles
   for (int i=0; i<npart-1; ++i){
@@ -342,30 +346,35 @@ void Measure(){ //Properties measurement
 
      if(dr < rcut){
        vij = 4.0/pow(dr,12) - 4.0/pow(dr,6);
+       wij = 48.0/3.0 * (1.0/pow(dr,12) - 0.5/pow(dr,6));
 
 //Potential energy
        v += vij;
+       w += wij;
      }
-    }          
+    }
   }
 
 //Kinetic energy
   for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
-   
+
     stima_pot = v/(double)npart; //Potential energy per particle
     stima_kin = t/(double)npart; //Kinetic energy per particle
     stima_temp = (2.0 / 3.0) * t/(double)npart; //Temperature
     stima_etot = (t+v)/(double)npart; //Total energy per particle
+    stima_press = rho * temp + w / vol; //Pressure
 
     Epot << stima_pot  << endl;
     Ekin << stima_kin  << endl;
     Temp << stima_temp << endl;
     Etot << stima_etot << endl;
+    Press << stima_press << endl;
 
     Epot.close();
     Ekin.close();
     Temp.close();
     Etot.close();
+    Press.close();
 
     return;
 }
@@ -375,7 +384,7 @@ void Measure_T(){
   ofstream Temp;
 
   Temp.open(file + "/eq_temp.dat",ios::app);
-  
+
   //Kinetic energy
   for (int i=0; i<npart; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
   stima_temp = (2.0 / 3.0) * t/(double)npart; //Temperature
@@ -390,17 +399,15 @@ void Measure_T(){
 void Averages(std::string file){
   int N,L;
   if (file == "gas"){
-    N = nstep/(10 * 100);
-    L = nstep/N;
+    N = nstep/(10 * 50);
   }
   else if (file == "liquid"){
     N = nstep/(10 * 20);
-    L = nstep/N;
   }
   else {
     N = nstep/(10 * 10);
-    L = nstep/N;
   }
+  L = nstep/ (10 * N);
   double ave[N];
   double av2[N];
   double* sum_prog = new double[N];
@@ -409,8 +416,9 @@ void Averages(std::string file){
 
   const double K_b = 1.38064852 * pow(10,-23);
   const double eps = 120. * K_b;
+  const double sigma_A = 0.34 * pow(10,-9);
 
-  vector<string> files = {"etot", "ekin", "epot", "temp"};
+  vector<string> files = {"etot", "ekin", "epot", "temp", "press"};
   fstream input, output, data;
 
   for(auto name: files){
@@ -430,12 +438,12 @@ void Averages(std::string file){
     input.open(file + "/output_" + name + ".dat", ios::in); //Serie dati della simulazione
     output.open(file + "/ave_" + name + ".out", ios::out); //Data blocking
     data.open(file + "/ave_" + name + ".dat", ios::out); //Conversione SI del data blocking
-  
+
     for(int i=0;i<N;i++){
       sum = 0;
       for(int j=0;j<L;j++){
-	input >> k;
-	sum += k;
+	       input >> k;
+	       sum += k;
       }
       ave[i] = sum/L;
       av2[i] = pow(ave[i],2);
@@ -443,8 +451,8 @@ void Averages(std::string file){
 
     for(int i=0;i<N;i++){
       for(int j=0;j<i+1;j++){
-	sum_prog[i] += ave[j];
-	su2_prog[i] += av2[j];
+	       sum_prog[i] += ave[j];
+	       su2_prog[i] += av2[j];
       }
       sum_prog[i] /= (i+1);
       su2_prog[i] /= (i+1);
@@ -453,8 +461,9 @@ void Averages(std::string file){
       output << sum_prog[i] << " " << err_prog[i] << endl;
 
       if (name == "temp") data << sum_prog[i]*eps/K_b << " " << err_prog[i]*eps/K_b << endl;
+      else if (name == "press") data << sum_prog[i]*eps/pow(sigma_A,3) << " " << err_prog[i]*eps/pow(sigma_A,3) << endl;
       else  data << sum_prog[i]*eps << " " << err_prog[i]*eps << endl;
-      
+
     }
 
     input.close();
@@ -510,7 +519,7 @@ double Pbc(double r){  //Algorithm for periodic boundary conditions with side L=
 }
 
 double error(double* AV, double* AV2, int n){
-  
+
   if (n == 0)
     return 0;
   else

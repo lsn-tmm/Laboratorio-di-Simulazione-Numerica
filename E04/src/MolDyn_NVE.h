@@ -11,8 +11,8 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 //parameters, observables
 const int m_props=4;
 int n_props;
-int iv,ik,it,ie;
-double stima_pot, stima_kin, stima_etot, stima_temp;
+int iv,ik,it,ie, iw;
+double stima_pot, stima_kin, stima_etot, stima_temp, stima_press;
 double T = 0;
 
 // averages
