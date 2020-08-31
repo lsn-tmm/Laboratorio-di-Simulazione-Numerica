@@ -17,7 +17,7 @@ int main (int argc, char *argv[]){
   //Inizializzazione libreria random
   Random rnd;
   Set_random(rnd);
-  
+
   //Inizio programma
   Exponential exp(1.);
   Lorentzian lor(1.,0.);
@@ -36,7 +36,7 @@ int main (int argc, char *argv[]){
 	sum[1] += exp.Eval( rnd.Rannyu() );
 	double x;
 	//Controllo sull'intervallo di generazione per non far fallire l'istogramma
-	do x = lor.Eval( rnd.Rannyu() ); while( x < -10 || x > 10); 
+	do x = lor.Eval( rnd.Rannyu() ); while( x < -20 || x > 20);
 	sum[2] += x;
       }
       Std << sum[0]/(double)el << endl;
@@ -53,7 +53,7 @@ int main (int argc, char *argv[]){
 }
 
 void Set_random(Random & rnd){
-  
+
 int seed[4];
   int p1, p2;
   ifstream Primes("Primes");
@@ -74,5 +74,5 @@ int seed[4];
     }
     input.close();
   } else cerr << "PROBLEM: Unable to open seed.in" << endl;
-  
+
 }
