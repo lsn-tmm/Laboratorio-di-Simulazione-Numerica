@@ -6,6 +6,15 @@ E04/.ipynb_checkpoints/*.ipynb
 E05/.ipynb_checkpoints/*.ipynb
 E06/.ipynb_checkpoints/*.ipynb
 E07/.ipynb_checkpoints/*.ipynb
+E07/Molecular/solid/*epot*
+E07/Molecular/solid/*pres*
+E07/Molecular/solid/*temp*
+E07/Molecular/liquid/*epot*
+E07/Molecular/liquid/*pres*
+E07/Molecular/liquid/*temp*
+E07/Molecular/gas/*epot*
+E07/Molecular/gas/*pres*
+E07/Molecular/gas/*temp*
 E08/.ipynb_checkpoints/*.ipynb
 E09/.ipynb_checkpoints/*.ipynb
 E10/.ipynb_checkpoints/*.ipynb
