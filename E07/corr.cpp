@@ -13,14 +13,14 @@ void Autocorrelation(string, string);
 
 int main(){
 
-  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.solid", "ac_epot.solid");
-  // check //Autocorrelation("MonteCarlo/correlation/correlation_press.solid", "ac_press.solid");
+  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.solid", "MonteCarlo/autocorrelation/ac_epot.solid");
+  // check //Autocorrelation("MonteCarlo/correlation/correlation_press.solid", "MonteCarlo/autocorrelation/ac_press.solid");
 
-  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.liquid", "ac_epot.liquid");
-  // check //Autocorrelation("MonteCarlo/correlation/correlation_press.liquid", "ac_press.liquid");
+  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.liquid", "MonteCarlo/autocorrelation/ac_epot.liquid");
+  // check //Autocorrelation("MonteCarlo/correlation/correlation_press.liquid", "MonteCarlo/autocorrelation/ac_press.liquid");
 
-  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.gas", "ac_epot.gas");
-  Autocorrelation("MonteCarlo/correlation/correlation_press.gas", "ac_press.gas");
+  // check //Autocorrelation("MonteCarlo/correlation/correlation_epot.gas", "MonteCarlo/autocorrelation/ac_epot.gas");
+  Autocorrelation("MonteCarlo/correlation/correlation_press.gas", "MonteCarlo/autocorrelation/ac_press.gas");
   
   return 0;
   
