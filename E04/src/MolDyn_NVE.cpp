@@ -399,13 +399,13 @@ void Measure_T(){
 void Averages(std::string file){
   int N,L;
   if (file == "gas"){
-    N = nstep/(10 * 50);
+    N = nstep/(10 * 250);
   }
   else if (file == "liquid"){
-    N = nstep/(10 * 20);
+    N = nstep/(10 * 100);
   }
   else {
-    N = nstep/(10 * 10);
+    N = nstep/(10 * 50);
   }
   L = nstep/ (10 * N);
   double ave[N];
