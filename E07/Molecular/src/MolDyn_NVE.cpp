@@ -45,7 +45,13 @@ int main(){
 
   my_system("./ " + file + "/clean.sh");
 
-  for (int i=0;i<7;i++) {
+  int eq_step = 0;
+  int restart = 0;
+  if  (file == "solid") {eq_step = 5*pow(10,3); restart = 3;}
+  else if (file == "liquid") {eq_step = 5*pow(10,3); restart = 5;}
+  else if (file == "gas") {eq_step = pow(10,4); restart = 5;}
+
+  for (int i=0;i<restart;i++) {
     if (i == 0){
       cout << endl << "FIRST INPUT" << endl;
       Input();    //Inizialization
@@ -55,7 +61,7 @@ int main(){
       Restart(); //Equilibration
     }
     int nconf = 1;
-    for(int istep=1; istep <= pow(10,3); ++istep){
+    for(int istep=1; istep <= eq_step; ++istep){
       Move();           //Move particles with Verlet algorithm
       if(istep%100 == 0) cout << "Number of time-steps: " << istep << endl;
       if(istep%10 == 0){
@@ -170,9 +176,9 @@ void Input(void){ //Prepare all stuff for the simulation
   Measure();
 
 //Print initial values for the potential energy and virial
-  cout << "Initial potential energy (with tail corrections) = " << walker[iv]/(double)npart + vtail << endl;
-  cout << "Virial                   (with tail corrections) = " << walker[iw]/(double)npart + ptail << endl;
-  cout << "Pressure                 (with tail corrections) = " << rho * temp + (walker[iw] + (double)npart * ptail) / vol << endl << endl;
+  //cout << "Initial potential energy (with tail corrections) = " << walker[iv]/(double)npart + vtail << endl;
+  //cout << "Virial                   (with tail corrections) = " << walker[iw]/(double)npart + ptail << endl;
+  //cout << "Pressure                 (with tail corrections) = " << rho * temp + (walker[iw] + (double)npart * ptail) / vol << endl << endl;
 
 //Prepare initial velocities
    cout << "Prepare random velocities with center of mass velocity equal to zero " << endl << endl;
